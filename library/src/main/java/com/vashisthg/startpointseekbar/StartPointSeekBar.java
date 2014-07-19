@@ -87,9 +87,12 @@ public class StartPointSeekBar<T extends Number>  extends View
     private float mDownMotionX;
     private int mActivePointerId = INVALID_POINTER_ID;
 
-    public StartPointSeekBar(T absoluteMinValue, T absoluteMaxValue, Context context)
+    public StartPointSeekBar(T absoluteMinValue, T absoluteMaxValue, double start, Context context)
     {
         super(context);
+
+        normalizedThumbValue = start;
+
         thumbImage = BitmapFactory.decodeResource(getResources(),
                 R.drawable.seek_thumb_normal);
         thumbPressedImage = BitmapFactory.decodeResource(getResources(),
@@ -118,11 +121,13 @@ public class StartPointSeekBar<T extends Number>  extends View
     @Override
     protected synchronized void onMeasure(int widthMeasureSpec,
                                           int heightMeasureSpec) {
-        int width = 200;
+
+       int mode = MeasureSpec.getMode(widthMeasureSpec);
+        int width = thumbImage.getWidth();
         if (MeasureSpec.UNSPECIFIED != MeasureSpec.getMode(widthMeasureSpec)) {
             width = MeasureSpec.getSize(widthMeasureSpec);
         }
-        int height = thumbImage.getHeight();
+        int height = 300;
         if (MeasureSpec.UNSPECIFIED != MeasureSpec.getMode(heightMeasureSpec)) {
             height = Math.min(height, MeasureSpec.getSize(heightMeasureSpec));
         }
@@ -144,7 +149,7 @@ public class StartPointSeekBar<T extends Number>  extends View
                 // Remember where the motion event started
                 mActivePointerId = event.getPointerId(event.getPointerCount() - 1);
                 pointerIndex = event.findPointerIndex(mActivePointerId);
-                mDownMotionX = event.getX(pointerIndex);
+                mDownMotionX = event.getY(pointerIndex);
 
                 isThumbPressed = evalPressedThumb(mDownMotionX);
 
@@ -167,7 +172,7 @@ public class StartPointSeekBar<T extends Number>  extends View
                     } else {
                         // Scroll to follow the motion event
                         pointerIndex = event.findPointerIndex(mActivePointerId);
-                        final float x = event.getX(pointerIndex);
+                        final float x = event.getY(pointerIndex);
 
                         if (Math.abs(x - mDownMotionX) > mScaledTouchSlop) {
                             setPressed(true);
@@ -205,7 +210,7 @@ public class StartPointSeekBar<T extends Number>  extends View
             case MotionEvent.ACTION_POINTER_DOWN: {
                 final int index = event.getPointerCount() - 1;
                 // final int index = ev.getActionIndex();
-                mDownMotionX = event.getX(index);
+                mDownMotionX = event.getY(index);
                 mActivePointerId = event.getPointerId(index);
                 invalidate();
                 break;
@@ -234,7 +239,7 @@ public class StartPointSeekBar<T extends Number>  extends View
             // a new active pointer and adjust accordingly.
             // TODO: Make this decision more intelligent.
             final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
-            mDownMotionX = ev.getX(newPointerIndex);
+            mDownMotionX = ev.getY(newPointerIndex);
             mActivePointerId = ev.getPointerId(newPointerIndex);
         }
     }
@@ -251,7 +256,7 @@ public class StartPointSeekBar<T extends Number>  extends View
 
     private final void trackTouchEvent(MotionEvent event) {
         final int pointerIndex = event.findPointerIndex(mActivePointerId);
-        final float x = event.getX(pointerIndex);
+        final float x = event.getY(pointerIndex);
 
 
         setNormalizedValue(screenToNormalized(x));
@@ -265,7 +270,7 @@ public class StartPointSeekBar<T extends Number>  extends View
      * @return The normalized value.
      */
     private double screenToNormalized(float screenCoord) {
-        int width = getWidth();
+        int width = getHeight();
         if (width <= 2 * padding) {
             // prevent division by zero, simply return 0.
             return 0d;
@@ -375,7 +380,7 @@ public class StartPointSeekBar<T extends Number>  extends View
      * @return The converted value in screen space.
      */
     private float normalizedToScreen(double normalizedCoord) {
-        return (float) (padding + normalizedCoord * (getWidth() - 2 * padding));
+        return (float) (padding + normalizedCoord * (getHeight() - 2 * padding));
     }
 
 
@@ -384,11 +389,11 @@ public class StartPointSeekBar<T extends Number>  extends View
     {
         super.onDraw(canvas);
 
+        final RectF rect = new RectF(0.5f * (getWidth() - lineHeight),
+                                    padding,
+                                    0.5f * (getWidth() + lineHeight),
+                                    getHeight() - padding);
 
-        // draw seek bar background line
-        final RectF rect = new RectF(padding,
-                0.5f * (getHeight() - lineHeight), getWidth() - padding,
-                0.5f * (getHeight() + lineHeight));
         paint.setColor(BACKGROUND_COLOR);
         canvas.drawRect(rect, paint);
 
@@ -397,12 +402,12 @@ public class StartPointSeekBar<T extends Number>  extends View
         if(normalizedToScreen(valueToNormalized(0.0d)) < normalizedToScreen(normalizedThumbValue))
         {
             Log.d(VIEW_LOG_TAG, "thumb: right");
-            rect.left = normalizedToScreen(valueToNormalized(0.0d));
-            rect.right = normalizedToScreen(normalizedThumbValue);
+            rect.top = normalizedToScreen(valueToNormalized(0.0d));
+            rect.bottom = normalizedToScreen(normalizedThumbValue);
         } else {
             Log.d(VIEW_LOG_TAG, "thumb: left");
-            rect.right = normalizedToScreen(valueToNormalized(0.0d));
-            rect.left = normalizedToScreen(normalizedThumbValue);
+            rect.bottom = normalizedToScreen(valueToNormalized(0.0d));
+            rect.top = normalizedToScreen(normalizedThumbValue);
         }
 
         paint.setColor(SINGLE_COLOR);
@@ -425,9 +430,9 @@ public class StartPointSeekBar<T extends Number>  extends View
      *            The canvas to draw upon.
      */
     private void drawThumb(float screenCoord, boolean pressed, Canvas canvas) {
-        canvas.drawBitmap(pressed ? thumbPressedImage : thumbImage, screenCoord
-                        - thumbHalfWidth,
-                (float) ((0.5f * getHeight()) - thumbHalfHeight), paint);
+        canvas.drawBitmap(pressed ? thumbPressedImage : thumbImage,
+                (float) ((0.5f * getWidth()) - thumbHalfWidth),screenCoord
+                        - thumbHalfHeight, paint);
     }
 
     /**

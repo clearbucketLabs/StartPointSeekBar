@@ -18,7 +18,9 @@ public class MainActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        StartPointSeekBar<Integer> seekBar = new StartPointSeekBar<Integer>(-100, +100, this);
+        StartPointSeekBar<Integer> seekBar = new StartPointSeekBar<Integer>(+100, -100,0.5, this);
+
+
         seekBar.setOnSeekBarChangeListener(new StartPointSeekBar.OnSeekBarChangeListener<Integer>()
         {
             @Override

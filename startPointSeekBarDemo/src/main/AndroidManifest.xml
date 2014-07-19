@@ -2,8 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.vashisthg.startpointseekbardemo" >
 
-    <uses-sdk android:targetSdkVersion="19"
-        android:minSdkVersion="8"/>
+    <uses-sdk android:targetSdkVersion="18"
+        android:minSdkVersion="12"/>
 
     <application
         android:allowBackup="true"
